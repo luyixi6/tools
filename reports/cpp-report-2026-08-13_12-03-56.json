@@ -1,0 +1,119 @@
+{
+  "project_root": "D:\\test\\test-cpp-project",
+  "report_name": "2026-08-13 12:03:56",
+  "issues": [
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "high",
+      "category": "memory_safety",
+      "title": "缺少必要的头文件包含，导致编译失败",
+      "description": "类定义中使用了 std::vector、std::string 和 size_t，但头文件没有包含 <vector>、<string> 和 <cstddef>。这会导致编译错误，因为编译器无法识别这些类型。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 1,
+      "line_end": 20,
+      "original_code": "#pragma once\n\nclass ConnectionPool {\npublic:\n    explicit ConnectionPool(int maxConns);\n    ~ConnectionPool();\n    ConnectionPool(const ConnectionPool&) = delete;\n    ConnectionPool& operator=(const ConnectionPool&) = delete;\n    ConnectionPool(ConnectionPool&&) noexcept = default;\n    ConnectionPool& operator=(ConnectionPool&&) noexcept = default;\n    int* getConnection();\n    void releaseConnection(int* conn);\n    int getMax() const;\n\nprivate:\n    std::vector<int> m_connections;\n    std::string name;\n    int m_max;\n};",
+      "suggested_code": "#pragma once\n\n#include <vector>\n#include <string>\n#include <cstddef>\n\nclass ConnectionPool {\npublic:\n    explicit ConnectionPool(int maxConns);\n    ~ConnectionPool();\n    ConnectionPool(const ConnectionPool&) = delete;\n    ConnectionPool& operator=(const ConnectionPool&) = delete;\n    ConnectionPool(ConnectionPool&&) noexcept = default;\n    ConnectionPool& operator=(ConnectionPool&&) noexcept = default;\n    int* getConnection();\n    void releaseConnection(int* conn);\n    int getMax() const;\n\nprivate:\n    std::vector<int> m_connections;\n    std::string name;\n    int m_max;\n};",
+      "rule_reference": "C++ Core Guidelines SF.11: Header files should be self-contained"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "high",
+      "category": "memory_safety",
+      "title": "getConnection 返回裸指针，存在内存管理风险",
+      "description": "getConnection 返回 int* 裸指针，调用者需要手动管理内存。如果调用者忘记调用 releaseConnection 或异常发生时未释放，会导致内存泄漏。建议使用智能指针（如 std::unique_ptr）或返回引用/值。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 13,
+      "line_end": 14,
+      "original_code": "    int* getConnection();\n    void releaseConnection(int* conn);",
+      "suggested_code": "    std::unique_ptr<int> getConnection();\n    void releaseConnection(std::unique_ptr<int> conn);",
+      "rule_reference": "C++ Core Guidelines R.3: A raw pointer (a T*) is non-owning"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "high",
+      "category": "memory_safety",
+      "title": "createArray 返回裸指针，存在内存泄漏风险",
+      "description": "createArray 返回 int* 裸指针，调用者需要手动 delete[]。如果调用者忘记释放或异常路径导致未释放，会造成内存泄漏。建议返回 std::vector<int> 或 std::unique_ptr<int[]>。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 26,
+      "line_end": 26,
+      "original_code": "int* createArray(int size);",
+      "suggested_code": "std::vector<int> createArray(int size);",
+      "rule_reference": "C++ Core Guidelines R.3: A raw pointer (a T*) is non-owning"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "medium",
+      "category": "type_safety",
+      "title": "riskyCast 使用 void* 参数，缺乏类型安全",
+      "description": "riskyCast 接受 void* 参数，调用者可以传入任意类型的指针，函数内部需要显式转换，容易导致类型不安全。建议使用模板或具体类型参数。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 24,
+      "line_end": 24,
+      "original_code": "void riskyCast(void* ptr);",
+      "suggested_code": "template<typename T>\nvoid riskyCast(T* ptr);",
+      "rule_reference": "C++ Core Guidelines ES.48: Avoid casts"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "medium",
+      "category": "undefined_behavior",
+      "title": "divide 函数未处理除零错误",
+      "description": "divide 函数直接执行 a/b，如果 b 为 0，会导致未定义行为（通常是程序崩溃）。需要添加除零检查并返回错误码或抛出异常。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 25,
+      "line_end": 25,
+      "original_code": "int divide(int a, int b);",
+      "suggested_code": "int divide(int a, int b) {\n    if (b == 0) {\n        throw std::invalid_argument(\"Division by zero\");\n    }\n    return a / b;\n}",
+      "rule_reference": "C++ Core Guidelines ES.100: Don't mix signed and unsigned arithmetic"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "medium",
+      "category": "exception_safety",
+      "title": "processBuffer 使用 char* 参数，缺乏 const 限定",
+      "description": "processBuffer 接受 char* 参数，如果函数只读取数据而不修改，应该使用 const char* 以提高 const 正确性。否则调用者无法传入 const 数据。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 23,
+      "line_end": 23,
+      "original_code": "void processBuffer(char* data, size_t len);",
+      "suggested_code": "void processBuffer(const char* data, size_t len);",
+      "rule_reference": "C++ Core Guidelines F.16: For \"in\" parameters, pass cheaply-copied types by value and others by reference to const"
+    },
+    {
+      "file_path": "include/engine/connection_pool.h",
+      "severity": "low",
+      "category": "code_style",
+      "title": "成员变量 name 未使用",
+      "description": "ConnectionPool 类中的 name 成员变量在类声明中定义，但没有任何方法使用它。这可能是未使用的成员，会增加对象大小并造成混淆。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 10,
+      "line_end": 10,
+      "original_code": "    std::string name;",
+      "suggested_code": "    // 如果不需要，删除此成员变量",
+      "rule_reference": "C++ Core Guidelines C.1: Organize related data into structures"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "by_severity": {
+      "high": 3,
+      "medium": 3,
+      "low": 1
+    },
+    "by_category": {
+      "memory_safety": 3,
+      "type_safety": 1,
+      "undefined_behavior": 1,
+      "exception_safety": 1,
+      "code_style": 1
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "project_root": "D:/test/test-cpp-project",
+  "report_name": "Claude Code cpp-check 报告示例",
+  "issues": [
+    {
+      "file_path": "src/engine/connection_pool.cpp",
+      "severity": "high",
+      "category": "memory_safety",
+      "title": "使用 delete 释放数组指针，应使用 delete[]",
+      "description": "m_connections 通过 new int[maxConns] 分配为数组，析构时应使用 delete[] 而非 delete，否则是未定义行为。",
+      "title_zh": "使用 delete 释放数组指针，应使用 delete[]",
+      "description_zh": "m_connections 通过 new int[maxConns] 分配为数组，析构时应使用 delete[] 而非 delete，否则是未定义行为。",
+      "line_start": 13,
+      "line_end": 15,
+      "original_code": "        delete m_connections;",
+      "suggested_code": "        delete[] m_connections;",
+      "rule_reference": "C++ Core Guidelines ES.61"
+    },
+    {
+      "file_path": "src/engine/connection_pool.cpp",
+      "severity": "critical",
+      "category": "undefined_behavior",
+      "title": "循环越界访问（i <= maxConns 应为 i < maxConns）",
+      "description": "构造函数中循环条件 i <= maxConns 会导致对 m_connections[maxConns] 的越界写入。",
+      "title_zh": "循环越界访问（i <= maxConns 应为 i < maxConns）",
+      "description_zh": "构造函数中循环条件 i <= maxConns 会导致对 m_connections[maxConns] 的越界写入。",
+      "line_start": 7,
+      "line_end": 9,
+      "original_code": "        for (int i = 0; i <= maxConns; i++) {",
+      "suggested_code": "        for (int i = 0; i < maxConns; i++) {",
+      "rule_reference": "C++ Core Guidelines ES.104"
+    }
+  ]
+}

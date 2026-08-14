@@ -1,0 +1,160 @@
+{
+  "project_root": "D:\\work\\c++_spring_view\\c++_spring_view",
+  "report_name": "2026-08-13 15:31:56",
+  "issues": [
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "high",
+      "category": "undefined_behavior",
+      "title": "潜在越界访问：substr 偏移量计算可能超出字符串边界",
+      "description": "在 benchmark_substring 函数中，偏移量计算 `(i * 73) % (large.size() - 50)` 在 i 较大时可能产生未定义行为。虽然取模运算保证了结果小于 large.size() - 50，但 i * 73 在 i 接近 INT_MAX 时可能发生整数溢出（有符号整数溢出是未定义行为）。此外，如果 large.size() 小于 50，则 large.size() - 50 会下溢为巨大的无符号数，导致越界访问。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 31,
+      "line_end": 31,
+      "original_code": "std::string s = large.substr((i * 73) % (large.size() - 50), 50);",
+      "suggested_code": "size_t offset = (static_cast<size_t>(i) * 73) % (large.size() > 50 ? large.size() - 50 : 0);\nstd::string s = large.substr(offset, 50);",
+      "rule_reference": "C++ Core Guidelines ES.103: Don't overflow"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "high",
+      "category": "undefined_behavior",
+      "title": "潜在越界访问：string_view::substr 偏移量计算存在相同问题",
+      "description": "与 string::substr 版本相同的问题。偏移量计算 `(i * 73) % (sv.size() - 50)` 存在整数溢出风险，且当 sv.size() 小于 50 时会导致下溢。这可能导致越界访问，产生未定义行为。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 42,
+      "line_end": 42,
+      "original_code": "std::string_view s = sv.substr((i * 73) % (sv.size() - 50), 50);",
+      "suggested_code": "size_t offset = (static_cast<size_t>(i) * 73) % (sv.size() > 50 ? sv.size() - 50 : 0);\nstd::string_view s = sv.substr(offset, 50);",
+      "rule_reference": "C++ Core Guidelines ES.103: Don't overflow"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "high",
+      "category": "undefined_behavior",
+      "title": "未对齐访问：reinterpret_cast 将字节数组转换为 Packet 结构体指针",
+      "description": "在 parse_packet 函数中，将 std::span<const std::byte> 的数据指针 reinterpret_cast 为 const Packet*。如果 data.data() 返回的指针未按 alignof(Packet) 对齐（通常为 4 或 8 字节），则访问 pkt->id 或 pkt->length 会导致未定义行为。在 demo_span_parsing 中，buffer 是 std::vector<std::byte>，其对齐可能仅为 1 字节，不满足 Packet 的对齐要求。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 78,
+      "line_end": 78,
+      "original_code": "const Packet* pkt = reinterpret_cast<const Packet*>(data.data());",
+      "suggested_code": "Packet pkt;\nstd::memcpy(&pkt, data.data(), sizeof(Packet));\n// 使用 pkt.id 和 pkt.length",
+      "rule_reference": "C++ Core Guidelines Type.1: Don't reinterpret_cast"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "high",
+      "category": "undefined_behavior",
+      "title": "未验证负载长度：subspan 可能越界访问",
+      "description": "在 parse_packet 中，使用 pkt->length 作为 subspan 的长度，但没有验证 pkt->length 是否小于等于 data.size() - sizeof(Packet)。如果报文数据被截断或 length 字段被篡改，subspan 会抛出 std::out_of_range 异常（未捕获）或产生越界访问。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 79,
+      "line_end": 79,
+      "original_code": "auto payload = data.subspan(sizeof(Packet), pkt->length);",
+      "suggested_code": "if (pkt->length > data.size() - sizeof(Packet)) {\n    std::cout << \"负载长度无效！\\n\";\n    return;\n}\nauto payload = data.subspan(sizeof(Packet), pkt->length);",
+      "rule_reference": "C++ Core Guidelines Bounds.2: Don't access out of bounds"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "high",
+      "category": "undefined_behavior",
+      "title": "未对齐访问：将 vector<byte> 数据 reinterpret_cast 为 Packet 指针",
+      "description": "在 demo_span_parsing 中，将 std::vector<std::byte> 的 data() 指针 reinterpret_cast 为 Packet*。std::vector<std::byte> 的对齐要求仅为 1 字节，而 Packet 需要至少 4 字节对齐。这违反了严格别名规则和对齐要求，导致未定义行为。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 105,
+      "line_end": 105,
+      "original_code": "Packet* hdr = reinterpret_cast<Packet*>(buffer.data());",
+      "suggested_code": "Packet hdr;\nhdr.id = 42;\nhdr.length = 3;\nstd::memcpy(buffer.data(), &hdr, sizeof(Packet));",
+      "rule_reference": "C++ Core Guidelines Type.1: Don't reinterpret_cast"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "medium",
+      "category": "exception_safety",
+      "title": "subspan 可能抛出异常但未捕获",
+      "description": "std::span::subspan 在 count 超出范围时会抛出 std::out_of_range 异常。在 parse_packet 中，pkt->length 未经验证，如果它大于 data.size() - sizeof(Packet)，将抛出未捕获的异常，导致程序终止。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 79,
+      "line_end": 79,
+      "original_code": "auto payload = data.subspan(sizeof(Packet), pkt->length);",
+      "suggested_code": "if (pkt->length > data.size() - sizeof(Packet)) {\n    std::cout << \"负载长度无效！\\n\";\n    return;\n}\nauto payload = data.subspan(sizeof(Packet), pkt->length);",
+      "rule_reference": "C++ Core Guidelines E.12: Use noexcept when exiting the program because of an error"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "medium",
+      "category": "type_safety",
+      "title": "有符号/无符号整数混合运算",
+      "description": "在 benchmark_substring 中，i 是 int 类型（有符号），而 large.size() 是 size_t 类型（无符号）。表达式 `(i * 73) % (large.size() - 50)` 中，i * 73 是 int 类型，与 size_t 进行取模运算时会发生隐式转换，可能导致意外的符号扩展或溢出。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 31,
+      "line_end": 31,
+      "original_code": "std::string s = large.substr((i * 73) % (large.size() - 50), 50);",
+      "suggested_code": "size_t offset = (static_cast<size_t>(i) * 73) % (large.size() - 50);\nstd::string s = large.substr(offset, 50);",
+      "rule_reference": "C++ Core Guidelines ES.101: Use unsigned types for bit manipulation"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "medium",
+      "category": "type_safety",
+      "title": "有符号/无符号整数混合运算",
+      "description": "在 string_view 版本中，i 是 int 类型，sv.size() 是 size_t 类型。表达式 `(i * 73) % (sv.size() - 50)` 存在有符号/无符号混合运算问题，可能导致意外的类型转换和溢出。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 42,
+      "line_end": 42,
+      "original_code": "std::string_view s = sv.substr((i * 73) % (sv.size() - 50), 50);",
+      "suggested_code": "size_t offset = (static_cast<size_t>(i) * 73) % (sv.size() - 50);\nstd::string_view s = sv.substr(offset, 50);",
+      "rule_reference": "C++ Core Guidelines ES.101: Use unsigned types for bit manipulation"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "low",
+      "category": "code_style",
+      "title": "循环变量类型不匹配",
+      "description": "循环变量 i 声明为 int，但用于索引 size_t 类型的字符串大小。在 64 位系统上，int 可能不足以表示所有可能的索引值，且与 size_t 比较时可能产生警告。建议使用 size_t 作为循环变量。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 31,
+      "line_end": 31,
+      "original_code": "for (int i = 0; i < loops; ++i) {",
+      "suggested_code": "for (size_t i = 0; i < loops; ++i) {",
+      "rule_reference": "C++ Core Guidelines ES.100: Don't mix signed and unsigned arithmetic"
+    },
+    {
+      "file_path": "c++_spring_view.cpp",
+      "severity": "low",
+      "category": "code_style",
+      "title": "循环变量类型不匹配",
+      "description": "在 string_view 版本中，循环变量 i 声明为 int，但用于索引 size_t 类型的字符串大小。建议使用 size_t 以避免潜在的类型转换问题。",
+      "title_zh": "",
+      "description_zh": "",
+      "line_start": 42,
+      "line_end": 42,
+      "original_code": "for (int i = 0; i < loops; ++i) {",
+      "suggested_code": "for (size_t i = 0; i < loops; ++i) {",
+      "rule_reference": "C++ Core Guidelines ES.100: Don't mix signed and unsigned arithmetic"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "by_severity": {
+      "high": 5,
+      "medium": 3,
+      "low": 2
+    },
+    "by_category": {
+      "undefined_behavior": 5,
+      "exception_safety": 1,
+      "type_safety": 2,
+      "code_style": 2
+    }
+  }
+}

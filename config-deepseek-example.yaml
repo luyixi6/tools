@@ -1,0 +1,49 @@
+api:
+  provider: deepseek
+  api_key: "sk-your-deepseek-key"
+  model: "deepseek-chat"
+  base_url: ""
+  max_tokens: 8192
+  extra_headers: {}
+
+project:
+  root: "D:/test/test-cpp-project"
+  compile_commands: ""
+  exclude_dirs:
+    - build
+    - third_party
+    - .git
+    - node_modules
+    - cmake-build-debug
+    - cmake-build-release
+  exclude_patterns:
+    - "*.pb.h"
+    - "*.pb.cc"
+    - "moc_*"
+    - "ui_*.h"
+
+analysis:
+  static_check: true
+  dynamic_check: true
+  tools:
+    clang_tidy: false
+    cppcheck: false
+  rules:
+    - memory_safety
+    - concurrency
+    - exception_safety
+    - modern_cpp
+    - code_style
+
+chunking:
+  strategy: auto
+  max_tokens_per_batch: 80000
+  max_file_tokens: 30000
+
+batch:
+  concurrent_modules: 1
+  rate_limit_rpm: 10
+
+server:
+  host: "127.0.0.1"
+  port: 8000

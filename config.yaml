@@ -1,0 +1,45 @@
+analysis:
+  dynamic_check: true
+  rules:
+  - memory_safety
+  - concurrency
+  - exception_safety
+  - modern_cpp
+  - code_style
+  static_check: true
+  tools:
+    clang_tidy: true
+    cppcheck: true
+api:
+  api_key: sk-099f427e8b8e40ca9be4063ee0e91890
+  base_url: ''
+  extra_headers: {}
+  max_tokens: 8192
+  model: deepseek-chat
+  provider: deepseek
+batch:
+  concurrent_modules: 2
+  rate_limit_rpm: 50
+chunking:
+  max_file_tokens: 30000
+  max_tokens_per_batch: 80000
+  strategy: auto
+language: zh
+project:
+  compile_commands: ''
+  exclude_dirs:
+  - build
+  - third_party
+  - .git
+  - node_modules
+  - cmake-build-debug
+  - cmake-build-release
+  exclude_patterns:
+  - '*.pb.h'
+  - '*.pb.cc'
+  - moc_*
+  - ui_*.h
+  root: D:\project\LM\PECVD-B300TSC\source\Statistic\StatisticClientCS
+server:
+  host: 127.0.0.1
+  port: 8000

@@ -1,0 +1,49 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; }
+:root {
+  --bg: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-secondary: #8b949e;
+  --accent: #58a6ff;
+  --accent-hover: #79c0ff;
+  --green: #3fb950;
+  --red: #f85149;
+  --orange: #d2991d;
+  --yellow: #e3b341;
+  --critical: #f85149;
+  --high: #f0883e;
+  --medium: #d2991d;
+  --low: #58a6ff;
+}
+body { background: var(--bg); color: var(--text); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+button {
+  cursor: pointer; border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 16px; font-size: 14px; background: var(--bg-tertiary);
+  color: var(--text); transition: all 0.15s;
+}
+button:hover { background: var(--border); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: #238636; border-color: #238636; color: #fff; }
+button.primary:hover { background: #2ea043; }
+button.danger { background: #da3633; border-color: #da3633; color: #fff; }
+button.danger:hover { background: #f85149; }
+button.success { background: #238636; border-color: #238636; color: #fff; }
+button.success:hover { background: #2ea043; }
+input, select, textarea {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 12px; color: var(--text); font-size: 14px; outline: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+.badge {
+  display: inline-flex; align-items: center; padding: 2px 8px;
+  border-radius: 12px; font-size: 12px; font-weight: 600;
+}
+.badge.critical { background: #f8514933; color: var(--critical); }
+.badge.high { background: #f0883e33; color: var(--high); }
+.badge.medium { background: #d2991d33; color: var(--medium); }
+.badge.low { background: #58a6ff33; color: var(--low); }
