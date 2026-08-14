@@ -11,7 +11,7 @@ analysis:
     clang_tidy: true
     cppcheck: true
 api:
-  api_key: sk-099f427e8b8e40ca9be4063ee0e91890
+  api_key:
   base_url: ''
   extra_headers: {}
   max_tokens: 8192
